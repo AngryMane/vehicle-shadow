@@ -12,3 +12,9 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 sled = "0.34.7"
 tokio = {version = "1.45.1", features = ["macros", "signal", "rt-multi-thread", "time"] }
+tokio-stream = "0.1"
+tonic = "0.10"
+prost = "0.12"
+
+[build-dependencies]
+tonic-build = "0.10"

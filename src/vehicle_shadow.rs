@@ -10,20 +10,26 @@ pub struct VehicleShadow {
 }
 
 impl VehicleShadow {
-    pub fn create() -> Result<VehicleShadow, Box<dyn std::error::Error>> {
+    pub fn create() -> Result<VehicleShadow, Box<dyn std::error::Error + Send + Sync>> {
         Ok(VehicleShadow {
             database: sled::Config::new().temporary(true).open()?,
             config: standard(),
         })
     }
 
-    pub fn set_signal(&self, signal: signal::Signal) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn set_signal(
+        &self,
+        signal: signal::Signal,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let endoded = encode_to_vec(&signal, self.config)?;
         self.database.insert(signal.path, endoded)?;
         Ok(())
     }
 
-    pub fn get_signal(&self, path: String) -> Result<signal::Signal, Box<dyn std::error::Error>> {
+    pub fn get_signal(
+        &self,
+        path: String,
+    ) -> Result<signal::Signal, Box<dyn std::error::Error + Send + Sync>> {
         let query_result = self.database.get(path)?;
         if let Some(encoded_signal) = query_result {
             let (signal, _len): (signal::Signal, usize) =

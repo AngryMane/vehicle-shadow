@@ -1,5 +1,4 @@
 use crate::signal;
-use crate::signal::LeafType;
 
 use std::fs;
 use std::io;
@@ -59,8 +58,7 @@ fn load_leaf(
     node: &serde_json::Value,
     result: &mut Vec<signal::Signal>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let leaf_type = read_type(&node)?;
-    let signal = create_signal(path, leaf_type);
+    let signal = create_signal(path, &node)?;
     result.push(signal);
     Ok(())
 }
@@ -88,39 +86,78 @@ fn read_children(
 }
 
 fn read_type(node: &serde_json::Value) -> Result<signal::LeafType, Box<dyn std::error::Error>> {
-    let tag_type_value = node.get(TAG_TYPE);
-    if None == tag_type_value {
-        return Err(Box::new(io::Error::new(
+    let value_str = node.get(TAG_TYPE).and_then(|v| v.as_str()).ok_or_else(|| {
+        Box::new(io::Error::new(
             io::ErrorKind::NotFound,
-            "type not found",
-        )));
-    }
+            format!("type not found: {}", node),
+        ))
+    })?;
 
-    let value_str = tag_type_value.unwrap().to_string().replace("\"", "");
-    let leaf_type: signal::LeafType = value_str.parse()?;
+    let leaf_type = value_str.parse()?;
     Ok(leaf_type)
 }
 
-fn create_signal(path: String, leaf_type: signal::LeafType) -> signal::Signal {
-    signal::Signal {
-        path: path,
-        state: create_state(),
-        config: create_config(leaf_type),
+fn read_datatype(
+    node: &serde_json::Value,
+) -> Result<signal::ValueType, Box<dyn std::error::Error>> {
+    let data_type_value = node.get(TAG_DATATYPE);
+    if None == data_type_value {
+        return Err(Box::new(io::Error::new(
+            io::ErrorKind::NotFound,
+            format!("datatype not found: {}", node),
+        )));
     }
+
+    let data_type_str = data_type_value.unwrap().to_string().replace("\"", "");
+    let value_type: signal::ValueType = data_type_str.parse()?;
+    Ok(value_type)
 }
 
-fn create_state() -> signal::State {
-    signal::State {
-        value: signal::Value::NAN,
+fn read_default_value(node: &serde_json::Value) -> Option<signal::Value> {
+    let default_value = node.get(TAG_DEFAULT);
+    if default_value.is_none() {
+        return None;
+    }
+
+    let value_type = read_datatype(node);
+    if let Err(_) = value_type {
+        return None;
+    }
+    let value_type = value_type.unwrap();
+    let value = default_value.unwrap();
+    let default_value = value_type.build_value(value);
+    Some(default_value)
+}
+
+fn create_signal(
+    path: String,
+    node: &serde_json::Value,
+) -> Result<signal::Signal, Box<dyn std::error::Error>> {
+    let signal = signal::Signal {
+        path: path,
+        state: create_state(node)?,
+        config: create_config(node)?,
+    };
+    Ok(signal)
+}
+
+fn create_state(node: &serde_json::Value) -> Result<signal::State, Box<dyn std::error::Error>> {
+    let default_value = read_default_value(node).unwrap_or(signal::Value::NAN);
+    let ret = signal::State {
+        value: default_value,
         capability: false,
         availability: false,
         reserved: String::from("reserved"),
-    }
+    };
+    Ok(ret)
 }
 
-fn create_config(leaf_type: signal::LeafType) -> signal::Config {
-    signal::Config {
+fn create_config(node: &serde_json::Value) -> Result<signal::Config, Box<dyn std::error::Error>> {
+    let leaf_type = read_type(&node)?;
+    let value_type = read_datatype(node)?;
+    let ret = signal::Config {
         leaf_type: leaf_type,
+        data_type: value_type,
         deprecation: None,
         unit: None,
         min: None,
@@ -129,5 +166,6 @@ fn create_config(leaf_type: signal::LeafType) -> signal::Config {
         comment: None,
         allowd: None,
         default: None,
-    }
+    };
+    Ok(ret)
 }

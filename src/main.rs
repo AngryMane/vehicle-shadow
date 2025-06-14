@@ -1,11 +1,14 @@
+mod rpc;
 pub mod signal;
 pub mod vehicle_shadow;
 pub mod vss_json_loader;
 
 use clap::Parser;
-use log::{error, info};
-use std::time::Duration;
+use log::info;
 use tokio;
+
+use crate::rpc::databroker_server::run_server;
+use crate::vehicle_shadow::VehicleShadow;
 
 #[derive(Parser, Debug)]
 #[command(
@@ -20,16 +23,33 @@ struct Cli {
 
 #[tokio::main]
 async fn main() {
-    let args = Cli::parse();
-
-    env_logger::init();
     info!("vehicle-signal-shadow service started");
+    let vehicle_shadow = initalize();
+
+    let main_loop = async {
+        let _ = run_server(vehicle_shadow, "[::1]:50051").await;
+    };
+
     let shutdown_signal = async {
         tokio::signal::ctrl_c()
             .await
             .expect("failed to install signal handler");
         info!("shutdown signal received");
     };
+
+    tokio::select! {
+        _ = main_loop => {},
+        _ = shutdown_signal => {
+            info!("shutting down");
+        }
+    }
+
+    cleanup().await;
+}
+
+fn initalize() -> VehicleShadow {
+    let args = Cli::parse();
+    env_logger::init();
 
     let result = vss_json_loader::load_vss_json(args.vss);
     if let Err(e) = &result {
@@ -38,70 +58,14 @@ async fn main() {
     let signals = result.unwrap();
     let vehicle_shadow = vehicle_shadow::VehicleShadow::create().unwrap();
     for signal in signals {
-        vehicle_shadow.set_signal(signal);
+        let _ = vehicle_shadow.set_signal(signal);
     }
-
-    let _ = vehicle_shadow.dump();
-    return;
-
-    let main_loop = async {
-        loop {
-            if let Err(e) = do_work().await {
-                error!("work failed: {}", e);
-            }
-            tokio::time::sleep(Duration::from_secs(5)).await;
-        }
-    };
-
-    tokio::select! {
-        _ = main_loop => {},
-        _ = shutdown_signal => {
-            info!("gracefully shutting down");
-        }
-    }
-
-    cleanup().await;
-}
-
-async fn do_work() -> Result<(), Box<dyn std::error::Error>> {
-    info!("doing work...");
-    Ok(())
+    //let _ = vehicle_shadow.dump();
+    vehicle_shadow
 }
 
 async fn cleanup() {
     info!("cleaning up resources...");
-}
-
-fn main_loop() -> Result<(), Box<dyn std::error::Error>> {
-    Ok(())
-}
-
-fn run() {
-    let vehicle_shadow = vehicle_shadow::VehicleShadow::create().unwrap();
-    let path: String = String::from("signal");
-    let data = signal::Signal {
-        path: path.clone(),
-        state: signal::State {
-            value: signal::Value::Bool(true),
-            capability: true,
-            availability: true,
-            reserved: String::from("reserved"),
-        },
-        config: signal::Config {
-            leaf_type: signal::LeafType::Actuator,
-            deprecation: None,
-            unit: None,
-            min: None,
-            max: None,
-            description: None,
-            comment: None,
-            allowd: None,
-            default: None,
-        },
-    };
-    let _ = vehicle_shadow.set_signal(data);
-    let signal = vehicle_shadow.get_signal(path);
-    println!("{:?}", signal);
 }
 
 #[cfg(test)]
