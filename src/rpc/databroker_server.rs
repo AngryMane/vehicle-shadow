@@ -292,37 +292,37 @@ impl SignalService for SignalServiceImpl {
         info!("Set request for {} signals", req.signals.len());
 
         for set_request in req.signals {
-            let result = match self
-                .vehicle_shadow
-                .read()
-                .await
-                .get_signal(set_request.path.clone())
-            {
-                Ok(signal) => {
-                    // TODO: protoのValueをRustのValueに変換する処理を実装
-                    // 現在は簡易実装として、既存の値を保持
-                    match self.vehicle_shadow.write().await.set_signal(signal) {
-                        Ok(_) => SetResult {
-                            path: set_request.path,
-                            success: true,
-                            error_message: String::new(),
-                        },
-                        Err(e) => {
-                            error!("Failed to set signal {}: {}", set_request.path, e);
-                            SetResult {
+            let result = {
+                let signal_result = self.vehicle_shadow.read().await.get_signal(set_request.path.clone());
+                
+                match signal_result {
+                    Ok(signal) => {
+                        // TODO: protoのValueをRustのValueに変換する処理を実装
+                        // 現在は簡易実装として、既存の値を保持
+                        let set_result = self.vehicle_shadow.write().await.set_signal(signal);
+                        match set_result {
+                            Ok(_) => SetResult {
                                 path: set_request.path,
-                                success: false,
-                                error_message: format!("Failed to set signal: {}", e),
+                                success: true,
+                                error_message: String::new(),
+                            },
+                            Err(e) => {
+                                error!("Failed to set signal {}: {}", set_request.path, e);
+                                SetResult {
+                                    path: set_request.path,
+                                    success: false,
+                                    error_message: format!("Failed to set signal: {}", e),
+                                }
                             }
                         }
                     }
-                }
-                Err(e) => {
-                    error!("Signal not found: {}", set_request.path);
-                    SetResult {
-                        path: set_request.path,
-                        success: false,
-                        error_message: format!("Signal not found: {}", e),
+                    Err(e) => {
+                        error!("Signal not found: {}", set_request.path);
+                        SetResult {
+                            path: set_request.path,
+                            success: false,
+                            error_message: format!("Signal not found: {}", e),
+                        }
                     }
                 }
             };

@@ -25,21 +25,53 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'vehicle-signal-shadow'",
+            "name": "Debug CLI Set",
             "cargo": {
                 "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=vehicle-signal-shadow",
-                    "--package=vehicle-signal-shadow"
+                    "build",
+                    "--manifest-path=cli/Cargo.toml"
                 ],
                 "filter": {
-                    "name": "vehicle-signal-shadow",
+                    "name": "vehicle-signal-shadow-cli",
                     "kind": "bin"
                 }
             },
-            "args": [],
-            "cwd": "${workspaceFolder}"
+            "args": ["set", "-p", "Vehicle.Speed", "-v", "100"],
+            "cwd": "${workspaceFolder}/cli"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug CLI Get",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--manifest-path=cli/Cargo.toml"
+                ],
+                "filter": {
+                    "name": "vehicle-signal-shadow-cli",
+                    "kind": "bin"
+                }
+            },
+            "args": ["get", "Vehicle.Speed"],
+            "cwd": "${workspaceFolder}/cli"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug CLI Subscribe",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--manifest-path=cli/Cargo.toml"
+                ],
+                "filter": {
+                    "name": "vehicle-signal-shadow-cli",
+                    "kind": "bin"
+                }
+            },
+            "args": ["subscribe", "Vehicle.Speed"],
+            "cwd": "${workspaceFolder}/cli"
         }
     ]
 }
