@@ -17,6 +17,37 @@ use vehicle_shadow::{
     SubscribeResponse, UnsubscribeRequest, UnsubscribeResponse,
 };
 
+// 変換関数: protoのValue -> RustのValue
+fn convert_proto_value_to_rust(proto_value: &vehicle_shadow::Value) -> crate::signal::Value {
+    match &proto_value.value {
+        Some(vehicle_shadow::value::Value::BoolValue(v)) => crate::signal::Value::Bool(*v),
+        Some(vehicle_shadow::value::Value::StringValue(v)) => crate::signal::Value::String(v.clone()),
+        Some(vehicle_shadow::value::Value::Int8Value(v)) => crate::signal::Value::Int8(*v as i8),
+        Some(vehicle_shadow::value::Value::Int16Value(v)) => crate::signal::Value::Int16(*v as i16),
+        Some(vehicle_shadow::value::Value::Int32Value(v)) => crate::signal::Value::Int32(*v),
+        Some(vehicle_shadow::value::Value::Int64Value(v)) => crate::signal::Value::Int64(*v),
+        Some(vehicle_shadow::value::Value::Uint8Value(v)) => crate::signal::Value::Uint8(*v as u8),
+        Some(vehicle_shadow::value::Value::Uint16Value(v)) => crate::signal::Value::Uint16(*v as u16),
+        Some(vehicle_shadow::value::Value::Uint32Value(v)) => crate::signal::Value::Uint32(*v),
+        Some(vehicle_shadow::value::Value::Uint64Value(v)) => crate::signal::Value::Uint64(*v),
+        Some(vehicle_shadow::value::Value::FloatValue(v)) => crate::signal::Value::Float(*v),
+        Some(vehicle_shadow::value::Value::DoubleValue(v)) => crate::signal::Value::Double(*v),
+        Some(vehicle_shadow::value::Value::BoolArrayValue(v)) => crate::signal::Value::BoolArray(v.values.clone()),
+        Some(vehicle_shadow::value::Value::StringArrayValue(v)) => crate::signal::Value::StringArray(v.values.clone()),
+        Some(vehicle_shadow::value::Value::Int8ArrayValue(v)) => crate::signal::Value::Int8Array(v.values.iter().map(|&x| x as i8).collect()),
+        Some(vehicle_shadow::value::Value::Int16ArrayValue(v)) => crate::signal::Value::Int16Array(v.values.iter().map(|&x| x as i16).collect()),
+        Some(vehicle_shadow::value::Value::Int32ArrayValue(v)) => crate::signal::Value::Int32Array(v.values.clone()),
+        Some(vehicle_shadow::value::Value::Int64ArrayValue(v)) => crate::signal::Value::Int64Array(v.values.clone()),
+        Some(vehicle_shadow::value::Value::Uint8ArrayValue(v)) => crate::signal::Value::Uint8Array(v.values.iter().map(|&x| x as u8).collect()),
+        Some(vehicle_shadow::value::Value::Uint16ArrayValue(v)) => crate::signal::Value::Uint16Array(v.values.iter().map(|&x| x as u16).collect()),
+        Some(vehicle_shadow::value::Value::Uint32ArrayValue(v)) => crate::signal::Value::Uint32Array(v.values.clone()),
+        Some(vehicle_shadow::value::Value::Uint64ArrayValue(v)) => crate::signal::Value::Uint64Array(v.values.clone()),
+        Some(vehicle_shadow::value::Value::FloatArrayValue(v)) => crate::signal::Value::FloatArray(v.values.clone()),
+        Some(vehicle_shadow::value::Value::DoubleArrayValue(v)) => crate::signal::Value::DoubleArray(v.values.clone()),
+        None => crate::signal::Value::NAN,
+    }
+}
+
 // 変換関数: RustのValue -> protoのValue
 fn convert_value_to_proto(value: &Value) -> vehicle_shadow::Value {
     match value {
@@ -296,9 +327,13 @@ impl SignalService for SignalServiceImpl {
                 let signal_result = self.vehicle_shadow.read().await.get_signal(set_request.path.clone());
                 
                 match signal_result {
-                    Ok(signal) => {
-                        // TODO: protoのValueをRustのValueに変換する処理を実装
-                        // 現在は簡易実装として、既存の値を保持
+                    Ok(mut signal) => {
+                        // protoのValueをRustのValueに変換
+                        if let Some(proto_value) = set_request.value {
+                            let rust_value = convert_proto_value_to_rust(&proto_value);
+                            signal.state.value = rust_value;
+                        }
+
                         let set_result = self.vehicle_shadow.write().await.set_signal(signal);
                         match set_result {
                             Ok(_) => SetResult {
