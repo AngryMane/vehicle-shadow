@@ -505,3 +505,80 @@ impl Display for LeafType {
         write!(f, "{}", name)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_value_creation() {
+        let bool_val = Value::Bool(true);
+        let string_val = Value::String("test".to_string());
+        let int_val = Value::Int32(42);
+        
+        assert!(matches!(bool_val, Value::Bool(true)));
+        assert!(matches!(string_val, Value::String(ref s) if s == "test"));
+        assert!(matches!(int_val, Value::Int32(42)));
+    }
+
+    #[test]
+    fn test_state_creation() {
+        let state = State {
+            value: Value::Int32(100),
+            capability: true,
+            availability: false,
+            reserved: "test".to_string(),
+        };
+        
+        assert!(matches!(state.value, Value::Int32(100)));
+        assert!(state.capability);
+        assert!(!state.availability);
+        assert_eq!(state.reserved, "test");
+    }
+
+    #[test]
+    fn test_signal_creation() {
+        let signal = Signal {
+            path: "Vehicle.Speed".to_string(),
+            state: State {
+                value: Value::Float(60.5),
+                capability: true,
+                availability: true,
+                reserved: "".to_string(),
+            },
+            config: Config {
+                leaf_type: LeafType::Sensor,
+                data_type: ValueType::TypeFloat,
+                deprecation: None,
+                unit: Some("km/h".to_string()),
+                min: None,
+                max: None,
+                description: None,
+                comment: None,
+                allowd: None,
+                default: None,
+            },
+        };
+        
+        assert_eq!(signal.path, "Vehicle.Speed");
+        assert!(matches!(signal.state.value, Value::Float(60.5)));
+        assert_eq!(signal.config.unit, Some("km/h".to_string()));
+    }
+
+    #[test]
+    fn test_value_type_from_str() {
+        assert!(matches!(ValueType::from_str("bool").unwrap(), ValueType::TypeBool));
+        assert!(matches!(ValueType::from_str("string").unwrap(), ValueType::TypeString));
+        assert!(matches!(ValueType::from_str("int32").unwrap(), ValueType::TypeInt32));
+        assert!(ValueType::from_str("invalid").is_err());
+    }
+
+    #[test]
+    fn test_leaf_type_from_str() {
+        assert!(matches!(LeafType::from_str("sensor").unwrap(), LeafType::Sensor));
+        assert!(matches!(LeafType::from_str("actuator").unwrap(), LeafType::Actuator));
+        assert!(matches!(LeafType::from_str("attribute").unwrap(), LeafType::Attribute));
+        assert!(matches!(LeafType::from_str("branch").unwrap(), LeafType::Branch));
+        assert!(LeafType::from_str("invalid").is_err());
+    }
+}

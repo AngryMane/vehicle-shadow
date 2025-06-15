@@ -301,7 +301,7 @@ impl SignalServiceImpl {
 
 #[tonic::async_trait]
 impl SignalService for SignalServiceImpl {
-    async fn get(&self, request: Request<GetRequest>) -> Result<Response<GetResponse>, Status> {
+    async fn get(&self, request: Request<GetRequest>) -> std::result::Result<Response<GetResponse>, Status> {
         let req = request.into_inner();
         let mut signals = Vec::new();
         let mut success = true;
@@ -330,7 +330,7 @@ impl SignalService for SignalServiceImpl {
         }))
     }
 
-    async fn set(&self, request: Request<SetRequest>) -> Result<Response<SetResponse>, Status> {
+    async fn set(&self, request: Request<SetRequest>) -> std::result::Result<Response<SetResponse>, Status> {
         let req = request.into_inner();
         let mut results = Vec::new();
         let mut success = true;
@@ -407,12 +407,12 @@ impl SignalService for SignalServiceImpl {
     }
 
     type SubscribeStream =
-        tokio_stream::wrappers::ReceiverStream<Result<SubscribeResponse, Status>>;
+        tokio_stream::wrappers::ReceiverStream<std::result::Result<SubscribeResponse, Status>>;
 
     async fn subscribe(
         &self,
         request: Request<SubscribeRequest>,
-    ) -> Result<Response<Self::SubscribeStream>, Status> {
+    ) -> std::result::Result<Response<Self::SubscribeStream>, Status> {
         let req = request.into_inner();
         let (tx, rx) = tokio::sync::mpsc::channel(100);
 
@@ -449,7 +449,7 @@ impl SignalService for SignalServiceImpl {
     async fn unsubscribe(
         &self,
         request: Request<UnsubscribeRequest>,
-    ) -> Result<Response<UnsubscribeResponse>, Status> {
+    ) -> std::result::Result<Response<UnsubscribeResponse>, Status> {
         let req = request.into_inner();
         let success = true;
         let error_message = String::new();
@@ -472,7 +472,7 @@ impl SignalService for SignalServiceImpl {
 pub async fn run_server(
     vehicle_shadow: VehicleShadow,
     addr: &str,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+) -> std::result::Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let addr = addr.parse()?;
     let service = SignalServiceImpl::new(vehicle_shadow);
 

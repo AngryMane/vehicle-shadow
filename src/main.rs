@@ -1,33 +1,33 @@
+mod config;
+mod error;
 mod rpc;
 pub mod signal;
 pub mod vehicle_shadow;
 pub mod vss_json_loader;
 
-use clap::Parser;
-use log::info;
+use log::{error, info};
 use tokio;
 
+use crate::config::Config;
+use crate::error::Result;
 use crate::rpc::databroker_server::run_server;
 use crate::vehicle_shadow::VehicleShadow;
 
-#[derive(Parser, Debug)]
-#[command(
-    name = "vehicle-signal-shadow",
-    version,
-    about = "A vehicel shadow signal service"
-)]
-struct Cli {
-    #[arg(short, long)]
-    vss: String,
-}
-
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
+    let config = Config::from_env();
+    config.setup_logging();
+    
     info!("vehicle-signal-shadow service started");
-    let vehicle_shadow = initalize();
+    info!("Server address: {}", config.server_addr);
+    info!("Log level: {}", config.log_level);
+    
+    let vehicle_shadow = initialize(&config)?;
 
     let main_loop = async {
-        let _ = run_server(vehicle_shadow, "[::1]:50051").await;
+        if let Err(e) = run_server(vehicle_shadow, &config.server_addr).await {
+            error!("Server error: {}", e);
+        }
     };
 
     let shutdown_signal = async {
@@ -45,23 +45,20 @@ async fn main() {
     }
 
     cleanup().await;
+    Ok(())
 }
 
-fn initalize() -> VehicleShadow {
-    let args = Cli::parse();
-    env_logger::init();
-
-    let result = vss_json_loader::load_vss_json(args.vss);
-    if let Err(e) = &result {
-        println!("{}", e.to_string());
-    }
-    let signals = result.unwrap();
-    let vehicle_shadow = vehicle_shadow::VehicleShadow::create().unwrap();
+fn initialize(config: &Config) -> Result<VehicleShadow> {
+    let signals = vss_json_loader::load_vss_json(config.vss.clone())?;
+    let vehicle_shadow = VehicleShadow::create()?;
+    
     for signal in signals {
-        let _ = vehicle_shadow.set_signal(signal);
+        if let Err(e) = vehicle_shadow.set_signal(signal) {
+            error!("Failed to set signal: {}", e);
+        }
     }
-    //let _ = vehicle_shadow.dump();
-    vehicle_shadow
+    
+    Ok(vehicle_shadow)
 }
 
 async fn cleanup() {
@@ -70,9 +67,11 @@ async fn cleanup() {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
     #[test]
-    fn it_works() {
-        // TODO
+    fn test_initialization() {
+        // TODO: Add proper tests
+        assert!(true);
     }
 }
