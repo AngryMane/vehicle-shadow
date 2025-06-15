@@ -17,22 +17,6 @@ use vehicle_shadow::{
     SubscribeResponse, UnsubscribeRequest, UnsubscribeResponse,
 };
 
-// 変換関数: protoのState -> RustのState（完全な置換）
-fn convert_proto_state_to_rust(proto_state: &vehicle_shadow::State) -> crate::signal::State {
-    let value = if let Some(ref proto_value) = proto_state.value {
-        convert_proto_value_to_rust(proto_value)
-    } else {
-        crate::signal::Value::NAN
-    };
-    
-    crate::signal::State {
-        value,
-        capability: proto_state.capability.unwrap_or(false),
-        availability: proto_state.availability.unwrap_or(false),
-        reserved: proto_state.reserved.clone().unwrap_or_default(),
-    }
-}
-
 // 変換関数: protoのValue -> RustのValue
 fn convert_proto_value_to_rust(proto_value: &vehicle_shadow::Value) -> crate::signal::Value {
     match &proto_value.value {

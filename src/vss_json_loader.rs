@@ -4,16 +4,16 @@ use std::fs;
 use std::io;
 
 const TAG_CHILDREN: &str = "children";
-const TAG_DESCRIPTION: &str = "description";
+//const TAG_DESCRIPTION: &str = "description";
 const TAG_TYPE: &str = "type";
 const TAG_DATATYPE: &str = "datatype";
-const TAG_ALLOWED: &str = "allowed";
-const TAG_COMMENT: &str = "comment";
-const TAG_UNIT: &str = "unit";
+//const TAG_ALLOWED: &str = "allowed";
+//const TAG_COMMENT: &str = "comment";
+//const TAG_UNIT: &str = "unit";
 const TAG_DEFAULT: &str = "default";
-const TAG_DEPRECATION: &str = "deprecation";
-const TAG_MIN: &str = "min";
-const TAG_MAX: &str = "max";
+//const TAG_DEPRECATION: &str = "deprecation";
+//const TAG_MIN: &str = "min";
+//const TAG_MAX: &str = "max";
 
 pub fn load_vss_json(
     vss_json_path: String,
