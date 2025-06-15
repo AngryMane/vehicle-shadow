@@ -101,8 +101,8 @@ async fn get_signals(client: &mut SignalServiceClient<Channel>, paths: Vec<Strin
                 if let Some(value) = state.value {
                     println!("  Value: {}", format_value(&value));
                 }
-                println!("  Capability: {}", state.capability);
-                println!("  Availability: {}", state.availability);
+                println!("  Capability: {}", state.capability.unwrap_or(false));
+                println!("  Availability: {}", state.availability.unwrap_or(false));
             }
             if let Some(config) = signal.config {
                 println!("  Type: {:?}", config.leaf_type);
@@ -176,8 +176,8 @@ async fn subscribe_signals(client: &mut SignalServiceClient<Channel>, paths: Vec
                 if let Some(value) = state.value {
                     println!("  Value: {}", format_value(&value));
                 }
-                println!("  Capability: {}", state.capability);
-                println!("  Availability: {}", state.availability);
+                println!("  Capability: {}", state.capability.unwrap_or(false));
+                println!("  Availability: {}", state.availability.unwrap_or(false));
             }
             println!();
         }
@@ -212,26 +212,23 @@ fn parse_state_from_json(json_str: &str) -> Result<State> {
     match json_value {
         serde_json::Value::Object(obj) => {
             let value = if let Some(value_json) = obj.get("value") {
-                parse_value_from_json(&value_json.to_string())?
+                Some(parse_value_from_json(&value_json.to_string())?)
             } else {
-                Value { value: None }
+                None
             };
             
             let capability = obj.get("capability")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false);
+                .and_then(|v| v.as_bool());
             
             let availability = obj.get("availability")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false);
+                .and_then(|v| v.as_bool());
             
             let reserved = obj.get("reserved")
                 .and_then(|v| v.as_str())
-                .unwrap_or("reserved")
-                .to_string();
+                .map(|s| s.to_string());
             
             Ok(State {
-                value: Some(value),
+                value,
                 capability,
                 availability,
                 reserved,
@@ -242,9 +239,9 @@ fn parse_state_from_json(json_str: &str) -> Result<State> {
             let value = parse_value_from_json(json_str)?;
             Ok(State {
                 value: Some(value),
-                capability: false,
-                availability: false,
-                reserved: "reserved".to_string(),
+                capability: None,
+                availability: None,
+                reserved: None,
             })
         }
     }

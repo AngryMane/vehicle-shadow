@@ -17,7 +17,7 @@ use vehicle_shadow::{
     SubscribeResponse, UnsubscribeRequest, UnsubscribeResponse,
 };
 
-// 変換関数: protoのState -> RustのState
+// 変換関数: protoのState -> RustのState（完全な置換）
 fn convert_proto_state_to_rust(proto_state: &vehicle_shadow::State) -> crate::signal::State {
     let value = if let Some(ref proto_value) = proto_state.value {
         convert_proto_value_to_rust(proto_value)
@@ -27,9 +27,9 @@ fn convert_proto_state_to_rust(proto_state: &vehicle_shadow::State) -> crate::si
     
     crate::signal::State {
         value,
-        capability: proto_state.capability,
-        availability: proto_state.availability,
-        reserved: proto_state.reserved.clone(),
+        capability: proto_state.capability.unwrap_or(false),
+        availability: proto_state.availability.unwrap_or(false),
+        reserved: proto_state.reserved.clone().unwrap_or_default(),
     }
 }
 
@@ -222,9 +222,9 @@ fn convert_signal_to_proto(signal: &crate::signal::Signal) -> vehicle_shadow::Si
         path: signal.path.clone(),
         state: Some(vehicle_shadow::State {
             value: Some(convert_value_to_proto(&signal.state.value)),
-            capability: signal.state.capability,
-            availability: signal.state.availability,
-            reserved: signal.state.reserved.clone(),
+            capability: Some(signal.state.capability),
+            availability: Some(signal.state.availability),
+            reserved: Some(signal.state.reserved.clone()),
         }),
         config: Some(vehicle_shadow::Config {
             leaf_type: convert_leaf_type_to_proto(&signal.config.leaf_type) as i32,
@@ -249,7 +249,7 @@ fn convert_signal_to_proto(signal: &crate::signal::Signal) -> vehicle_shadow::Si
 // 購読管理用の構造体
 #[derive(Default)]
 pub struct SubscriptionManager {
-    subscriptions: HashMap<String, Vec<tokio::sync::mpsc::UnboundedSender<SubscribeResponse>>>,
+    subscriptions: HashMap<String, Vec<tokio::sync::mpsc::Sender<SubscribeResponse>>>,
 }
 
 impl SubscriptionManager {
@@ -262,8 +262,8 @@ impl SubscriptionManager {
     pub fn subscribe(
         &mut self,
         path: String,
-    ) -> tokio::sync::mpsc::UnboundedReceiver<SubscribeResponse> {
-        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    ) -> tokio::sync::mpsc::Receiver<SubscribeResponse> {
+        let (tx, rx) = tokio::sync::mpsc::channel(100);
         self.subscriptions
             .entry(path)
             .or_insert_with(Vec::new)
@@ -278,7 +278,7 @@ impl SubscriptionManager {
     pub fn notify(&self, path: &str, response: SubscribeResponse) {
         if let Some(senders) = self.subscriptions.get(path) {
             for sender in senders {
-                let _ = sender.send(response.clone());
+                let _ = sender.try_send(response.clone());
             }
         }
     }
@@ -346,15 +346,29 @@ impl SignalService for SignalServiceImpl {
                     Ok(mut signal) => {
                         // protoのStateをRustのStateに変換して設定
                         if let Some(proto_state) = &set_request.state {
-                            signal.state = convert_proto_state_to_rust(proto_state);
+                            apply_state_update(&mut signal.state, proto_state);
                         }
 
-                        let set_result = self.vehicle_shadow.write().await.set_signal(signal);
+                        let set_result = self.vehicle_shadow.write().await.set_signal(signal.clone());
                         match set_result {
-                            Ok(_) => SetResult {
-                                path: set_request.path,
-                                success: true,
-                                error_message: String::new(),
+                            Ok(_) => {
+                                // 値が変更されたので、購読者に通知
+                                let response = SubscribeResponse {
+                                    signal: Some(convert_signal_to_proto(&signal)),
+                                    error_message: String::new(),
+                                };
+                                let subscription_manager = self.subscription_manager.clone();
+                                let path = set_request.path.clone();
+                                tokio::spawn(async move {
+                                    let subscription_manager = subscription_manager.read().await;
+                                    subscription_manager.notify(&path, response);
+                                });
+
+                                SetResult {
+                                    path: set_request.path,
+                                    success: true,
+                                    error_message: String::new(),
+                                }
                             },
                             Err(e) => {
                                 error!("Failed to set signal {}: {}", set_request.path, e);
@@ -404,7 +418,11 @@ impl SignalService for SignalServiceImpl {
 
         info!("Subscribe request for paths: {:?}", req.paths);
 
-        for path in req.paths {
+        // SubscriptionManagerに購読を登録
+        for path in req.paths.clone() {
+            let mut subscription_manager = self.subscription_manager.write().await;
+            let mut subscription_rx = subscription_manager.subscribe(path.clone());
+            
             // 現在の値を取得して送信
             if let Ok(signal) = self.vehicle_shadow.read().await.get_signal(path.clone()) {
                 let response = SubscribeResponse {
@@ -413,6 +431,14 @@ impl SignalService for SignalServiceImpl {
                 };
                 let _ = tx.send(Ok(response)).await;
             }
+            
+            // 購読ストリームからの通知を転送
+            let tx_clone = tx.clone();
+            tokio::spawn(async move {
+                while let Some(response) = subscription_rx.recv().await {
+                    let _ = tx_clone.send(Ok(response)).await;
+                }
+            });
         }
 
         Ok(Response::new(tokio_stream::wrappers::ReceiverStream::new(
@@ -458,4 +484,20 @@ pub async fn run_server(
         .await?;
 
     Ok(())
+}
+
+// 部分的な更新を適用する関数
+fn apply_state_update(current_state: &mut crate::signal::State, proto_state: &vehicle_shadow::State) {
+    if let Some(ref proto_value) = proto_state.value {
+        current_state.value = convert_proto_value_to_rust(proto_value);
+    }
+    if let Some(capability) = proto_state.capability {
+        current_state.capability = capability;
+    }
+    if let Some(availability) = proto_state.availability {
+        current_state.availability = availability;
+    }
+    if let Some(ref reserved) = proto_state.reserved {
+        current_state.reserved = reserved.clone();
+    }
 }

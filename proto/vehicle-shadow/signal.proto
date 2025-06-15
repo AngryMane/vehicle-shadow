@@ -87,10 +87,10 @@ message Signal {
 
 // State information
 message State {
-  Value value = 1;
-  bool capability = 2;
-  bool availability = 3;
-  string reserved = 4;
+  optional Value value = 1;
+  optional bool capability = 2;
+  optional bool availability = 3;
+  optional string reserved = 4;
 }
 
 // Configuration information

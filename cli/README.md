@@ -42,7 +42,17 @@ cargo build --release
 # State全体を設定（新しい方法）
 ./target/release/vehicle-signal-shadow-cli set --path "Vehicle.Speed" --value '{"value": 60.5, "capability": true, "availability": true, "reserved": "updated"}'
 
-# 値のみを設定（capability, availability, reservedはデフォルト値）
+# 部分的な更新（新しい機能）
+# 値のみを更新
+./target/release/vehicle-signal-shadow-cli set --path "Vehicle.Speed" --value '{"value": 70.0}'
+
+# capabilityのみを更新
+./target/release/vehicle-signal-shadow-cli set --path "Vehicle.Speed" --value '{"capability": false}'
+
+# 複数のフィールドを同時に更新
+./target/release/vehicle-signal-shadow-cli set --path "Vehicle.Speed" --value '{"value": 80.0, "availability": true}'
+
+# 値のみを設定（capability, availability, reservedは更新されない）
 ./target/release/vehicle-signal-shadow-cli set --path "Vehicle.Lights.Headlight.IsOn" --value "true"
 
 # 文字列を設定
