@@ -1,17 +1,10 @@
 use clap::{Parser, Subcommand};
-use tonic::transport::Channel;
 use anyhow::Result;
 use log::{info, error};
 
-// 生成されたprotoファイルをインポート
-pub mod vehicle_shadow {
-    tonic::include_proto!("vehicle_shadow");
-}
-
-use vehicle_shadow::signal_service_client::SignalServiceClient;
-use vehicle_shadow::{
-    GetRequest, SetRequest, SetSignalRequest, SubscribeRequest, UnsubscribeRequest,
-    Value, BoolArray, StringArray, Int32Array, State,
+use vehicle_shadow_client::{
+    VehicleShadowClient, format_signal, format_value,
+    GetResponse, SetResponse, UnsubscribeResponse,
 };
 
 #[derive(Parser)]
@@ -65,8 +58,7 @@ async fn main() -> Result<()> {
     
     let cli = Cli::parse();
     
-    let channel = Channel::from_shared(cli.server)?.connect().await?;
-    let mut client = SignalServiceClient::new(channel);
+    let mut client = VehicleShadowClient::connect(&cli.server).await?;
 
     match cli.command {
         Commands::Get { paths } => {
@@ -86,35 +78,13 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn get_signals(client: &mut SignalServiceClient<Channel>, paths: Vec<String>) -> Result<()> {
-    info!("Getting signals: {:?}", paths);
-    
-    let request = tonic::Request::new(GetRequest { paths });
-    let response = client.get(request).await?;
-    let response = response.into_inner();
+async fn get_signals(client: &mut VehicleShadowClient, paths: Vec<String>) -> Result<()> {
+    let response = client.get_signals(paths).await?;
 
     if response.success {
         println!("Successfully retrieved {} signals:", response.signals.len());
         for signal in response.signals {
-            println!("Path: {}", signal.path);
-            if let Some(state) = signal.state {
-                if let Some(value) = state.value {
-                    println!("  Value: {}", format_value(&value));
-                }
-                println!("  Capability: {}", state.capability.unwrap_or(false));
-                println!("  Availability: {}", state.availability.unwrap_or(false));
-            }
-            if let Some(config) = signal.config {
-                println!("  Type: {:?}", config.leaf_type);
-                println!("  Data Type: {:?}", config.data_type);
-                if let Some(unit) = config.unit {
-                    println!("  Unit: {}", unit);
-                }
-                if let Some(description) = config.description {
-                    println!("  Description: {}", description);
-                }
-            }
-            println!();
+            println!("{}", format_signal(&signal));
         }
     } else {
         error!("Failed to get signals: {}", response.error_message);
@@ -124,24 +94,8 @@ async fn get_signals(client: &mut SignalServiceClient<Channel>, paths: Vec<Strin
     Ok(())
 }
 
-async fn set_signal(client: &mut SignalServiceClient<Channel>, path: String, value_json: String) -> Result<()> {
-    info!("Setting signal {} to value: {}", path, value_json);
-    
-    let state = parse_state_from_json(&value_json)?;
-    println!("{:?}", state);
-    
-    let set_request = SetSignalRequest {
-        path: path.clone(),
-        state: Some(state),
-    };
-
-    let request = tonic::Request::new(SetRequest {
-        signals: vec![set_request],
-    });
-    
-    let response = client.set(request).await?;
-    
-    let response = response.into_inner();
+async fn set_signal(client: &mut VehicleShadowClient, path: String, value_json: String) -> Result<()> {
+    let response = client.set_signal(path.clone(), &value_json).await?;
 
     if response.success {
         println!("Successfully set signal: {}", path);
@@ -160,11 +114,8 @@ async fn set_signal(client: &mut SignalServiceClient<Channel>, path: String, val
     Ok(())
 }
 
-async fn subscribe_signals(client: &mut SignalServiceClient<Channel>, paths: Vec<String>) -> Result<()> {
-    info!("Subscribing to signals: {:?}", paths);
-    
-    let request = tonic::Request::new(SubscribeRequest { paths });
-    let mut stream = client.subscribe(request).await?.into_inner();
+async fn subscribe_signals(client: &mut VehicleShadowClient, paths: Vec<String>) -> Result<()> {
+    let mut stream = client.subscribe(paths).await?;
 
     println!("Subscribed to signals. Waiting for updates...");
     println!("Press Ctrl+C to stop");
@@ -189,12 +140,8 @@ async fn subscribe_signals(client: &mut SignalServiceClient<Channel>, paths: Vec
     Ok(())
 }
 
-async fn unsubscribe_signals(client: &mut SignalServiceClient<Channel>, paths: Vec<String>) -> Result<()> {
-    info!("Unsubscribing from signals: {:?}", paths);
-    
-    let request = tonic::Request::new(UnsubscribeRequest { paths });
-    let response = client.unsubscribe(request).await?;
-    let response = response.into_inner();
+async fn unsubscribe_signals(client: &mut VehicleShadowClient, paths: Vec<String>) -> Result<()> {
+    let response = client.unsubscribe(paths).await?;
 
     if response.success {
         println!("Successfully unsubscribed from signals");
@@ -204,149 +151,4 @@ async fn unsubscribe_signals(client: &mut SignalServiceClient<Channel>, paths: V
     }
 
     Ok(())
-}
-
-fn parse_state_from_json(json_str: &str) -> Result<State> {
-    let json_value: serde_json::Value = serde_json::from_str(json_str)?;
-    
-    match json_value {
-        serde_json::Value::Object(obj) => {
-            let value = if let Some(value_json) = obj.get("value") {
-                Some(parse_value_from_json(&value_json.to_string())?)
-            } else {
-                None
-            };
-            
-            let capability = obj.get("capability")
-                .and_then(|v| v.as_bool());
-            
-            let availability = obj.get("availability")
-                .and_then(|v| v.as_bool());
-            
-            let reserved = obj.get("reserved")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string());
-            
-            Ok(State {
-                value,
-                capability,
-                availability,
-                reserved,
-            })
-        }
-        _ => {
-            // 単純な値の場合は、valueとして扱う
-            let value = parse_value_from_json(json_str)?;
-            Ok(State {
-                value: Some(value),
-                capability: None,
-                availability: None,
-                reserved: None,
-            })
-        }
-    }
-}
-
-fn parse_value_from_json(json_str: &str) -> Result<Value> {
-    let json_value: serde_json::Value = serde_json::from_str(json_str)?;
-    
-    match json_value {
-        serde_json::Value::Bool(b) => Ok(Value {
-            value: Some(vehicle_shadow::value::Value::BoolValue(b)),
-        }),
-        serde_json::Value::String(s) => Ok(Value {
-            value: Some(vehicle_shadow::value::Value::StringValue(s)),
-        }),
-        serde_json::Value::Number(n) => {
-            if let Some(i) = n.as_i64() {
-                if i >= i32::MIN as i64 && i <= i32::MAX as i64 {
-                    Ok(Value {
-                        value: Some(vehicle_shadow::value::Value::Int32Value(i as i32)),
-                    })
-                } else {
-                    Ok(Value {
-                        value: Some(vehicle_shadow::value::Value::Int64Value(i)),
-                    })
-                }
-            } else if let Some(f) = n.as_f64() {
-                Ok(Value {
-                    value: Some(vehicle_shadow::value::Value::DoubleValue(f)),
-                })
-            } else {
-                Err(anyhow::anyhow!("Invalid number format"))
-            }
-        }
-        serde_json::Value::Array(arr) => {
-            // 配列の最初の要素の型を基に配列型を決定
-            if arr.is_empty() {
-                return Err(anyhow::anyhow!("Empty arrays are not supported"));
-            }
-            
-            match &arr[0] {
-                serde_json::Value::Bool(_) => {
-                    let bool_values: Result<Vec<bool>, _> = arr.iter()
-                        .map(|v| v.as_bool().ok_or_else(|| anyhow::anyhow!("Invalid boolean value")))
-                        .collect();
-                    Ok(Value {
-                        value: Some(vehicle_shadow::value::Value::BoolArrayValue(BoolArray {
-                            values: bool_values?,
-                        })),
-                    })
-                }
-                serde_json::Value::String(_) => {
-                    let string_values: Result<Vec<String>, _> = arr.iter()
-                        .map(|v| v.as_str().map(|s| s.to_string()).ok_or_else(|| anyhow::anyhow!("Invalid string value")))
-                        .collect();
-                    Ok(Value {
-                        value: Some(vehicle_shadow::value::Value::StringArrayValue(StringArray {
-                            values: string_values?,
-                        })),
-                    })
-                }
-                serde_json::Value::Number(_) => {
-                    // 数値配列の場合はInt32Arrayとして扱う
-                    let int_values: Result<Vec<i32>, _> = arr.iter()
-                        .map(|v| v.as_i64().and_then(|i| i32::try_from(i).ok()).ok_or_else(|| anyhow::anyhow!("Invalid integer value")))
-                        .collect();
-                    Ok(Value {
-                        value: Some(vehicle_shadow::value::Value::Int32ArrayValue(Int32Array {
-                            values: int_values?,
-                        })),
-                    })
-                }
-                _ => Err(anyhow::anyhow!("Unsupported array element type")),
-            }
-        }
-        _ => Err(anyhow::anyhow!("Unsupported JSON value type")),
-    }
-}
-
-fn format_value(value: &Value) -> String {
-    match &value.value {
-        Some(vehicle_shadow::value::Value::BoolValue(v)) => format!("{}", v),
-        Some(vehicle_shadow::value::Value::StringValue(v)) => format!("\"{}\"", v),
-        Some(vehicle_shadow::value::Value::Int8Value(v)) => format!("{}", v),
-        Some(vehicle_shadow::value::Value::Int16Value(v)) => format!("{}", v),
-        Some(vehicle_shadow::value::Value::Int32Value(v)) => format!("{}", v),
-        Some(vehicle_shadow::value::Value::Int64Value(v)) => format!("{}", v),
-        Some(vehicle_shadow::value::Value::Uint8Value(v)) => format!("{}", v),
-        Some(vehicle_shadow::value::Value::Uint16Value(v)) => format!("{}", v),
-        Some(vehicle_shadow::value::Value::Uint32Value(v)) => format!("{}", v),
-        Some(vehicle_shadow::value::Value::Uint64Value(v)) => format!("{}", v),
-        Some(vehicle_shadow::value::Value::FloatValue(v)) => format!("{}", v),
-        Some(vehicle_shadow::value::Value::DoubleValue(v)) => format!("{}", v),
-        Some(vehicle_shadow::value::Value::BoolArrayValue(v)) => format!("{:?}", v.values),
-        Some(vehicle_shadow::value::Value::StringArrayValue(v)) => format!("{:?}", v.values),
-        Some(vehicle_shadow::value::Value::Int8ArrayValue(v)) => format!("{:?}", v.values),
-        Some(vehicle_shadow::value::Value::Int16ArrayValue(v)) => format!("{:?}", v.values),
-        Some(vehicle_shadow::value::Value::Int32ArrayValue(v)) => format!("{:?}", v.values),
-        Some(vehicle_shadow::value::Value::Int64ArrayValue(v)) => format!("{:?}", v.values),
-        Some(vehicle_shadow::value::Value::Uint8ArrayValue(v)) => format!("{:?}", v.values),
-        Some(vehicle_shadow::value::Value::Uint16ArrayValue(v)) => format!("{:?}", v.values),
-        Some(vehicle_shadow::value::Value::Uint32ArrayValue(v)) => format!("{:?}", v.values),
-        Some(vehicle_shadow::value::Value::Uint64ArrayValue(v)) => format!("{:?}", v.values),
-        Some(vehicle_shadow::value::Value::FloatArrayValue(v)) => format!("{:?}", v.values),
-        Some(vehicle_shadow::value::Value::DoubleArrayValue(v)) => format!("{:?}", v.values),
-        None => "NAN".to_string(),
-    }
 } 

@@ -1,6 +1,7 @@
 # Vehicle Signal Shadow
 
-Vehicle Signal Shadowは、車両のシグナルデータを管理するgRPCサービスです。VSS（Vehicle Signal Specification）に基づいて、車両の各種センサーやアクチュエーターのデータを取得・設定・購読することができます。
+Vehicle Signal Shadowは、車両のシグナルデータを管理するgRPCサービスです。  
+VSS（Vehicle Signal Specification）に基づいて、車両の各種センサーやアクチュエーターのデータを取得・設定・購読することができます。  
 
 ## 機能
 
