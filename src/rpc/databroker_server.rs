@@ -17,6 +17,22 @@ use vehicle_shadow::{
     SubscribeResponse, UnsubscribeRequest, UnsubscribeResponse,
 };
 
+// 変換関数: protoのState -> RustのState
+fn convert_proto_state_to_rust(proto_state: &vehicle_shadow::State) -> crate::signal::State {
+    let value = if let Some(ref proto_value) = proto_state.value {
+        convert_proto_value_to_rust(proto_value)
+    } else {
+        crate::signal::Value::NAN
+    };
+    
+    crate::signal::State {
+        value,
+        capability: proto_state.capability,
+        availability: proto_state.availability,
+        reserved: proto_state.reserved.clone(),
+    }
+}
+
 // 変換関数: protoのValue -> RustのValue
 fn convert_proto_value_to_rust(proto_value: &vehicle_shadow::Value) -> crate::signal::Value {
     match &proto_value.value {
@@ -328,10 +344,9 @@ impl SignalService for SignalServiceImpl {
                 
                 match signal_result {
                     Ok(mut signal) => {
-                        // protoのValueをRustのValueに変換
-                        if let Some(proto_value) = set_request.value {
-                            let rust_value = convert_proto_value_to_rust(&proto_value);
-                            signal.state.value = rust_value;
+                        // protoのStateをRustのStateに変換して設定
+                        if let Some(proto_state) = &set_request.state {
+                            signal.state = convert_proto_state_to_rust(proto_state);
                         }
 
                         let set_result = self.vehicle_shadow.write().await.set_signal(signal);

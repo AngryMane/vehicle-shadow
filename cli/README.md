@@ -36,14 +36,17 @@ cargo build --release
 #### 2. Set - シグナル値を設定
 
 ```bash
-# ブール値を設定
+# 単純な値を設定（従来の方法）
+./target/release/vehicle-signal-shadow-cli set --path "Vehicle.Speed" --value "60.5"
+
+# State全体を設定（新しい方法）
+./target/release/vehicle-signal-shadow-cli set --path "Vehicle.Speed" --value '{"value": 60.5, "capability": true, "availability": true, "reserved": "updated"}'
+
+# 値のみを設定（capability, availability, reservedはデフォルト値）
 ./target/release/vehicle-signal-shadow-cli set --path "Vehicle.Lights.Headlight.IsOn" --value "true"
 
 # 文字列を設定
 ./target/release/vehicle-signal-shadow-cli set --path "Vehicle.Cabin.Driver.Name" --value "\"John Doe\""
-
-# 数値を設定
-./target/release/vehicle-signal-shadow-cli set --path "Vehicle.Speed" --value "60.5"
 
 # 配列を設定
 ./target/release/vehicle-signal-shadow-cli set --path "Vehicle.Sensors.Temperature" --value "[25.5, 26.0, 24.8]"

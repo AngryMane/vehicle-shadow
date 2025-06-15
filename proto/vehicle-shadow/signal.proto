@@ -39,7 +39,7 @@ message SetRequest {
 // Individual signal set request
 message SetSignalRequest {
   string path = 1;
-  Value value = 2;
+  State state = 2;
 }
 
 // Response for set request

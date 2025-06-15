@@ -11,7 +11,7 @@ pub mod vehicle_shadow {
 use vehicle_shadow::signal_service_client::SignalServiceClient;
 use vehicle_shadow::{
     GetRequest, SetRequest, SetSignalRequest, SubscribeRequest, UnsubscribeRequest,
-    Value, BoolArray, StringArray, Int32Array,
+    Value, BoolArray, StringArray, Int32Array, State,
 };
 
 #[derive(Parser)]
@@ -127,11 +127,12 @@ async fn get_signals(client: &mut SignalServiceClient<Channel>, paths: Vec<Strin
 async fn set_signal(client: &mut SignalServiceClient<Channel>, path: String, value_json: String) -> Result<()> {
     info!("Setting signal {} to value: {}", path, value_json);
     
-    let value = parse_value_from_json(&value_json)?;
+    let state = parse_state_from_json(&value_json)?;
+    println!("{:?}", state);
     
     let set_request = SetSignalRequest {
         path: path.clone(),
-        value: Some(value),
+        state: Some(state),
     };
 
     let request = tonic::Request::new(SetRequest {
@@ -139,9 +140,11 @@ async fn set_signal(client: &mut SignalServiceClient<Channel>, path: String, val
     });
     
     let response = client.set(request).await?;
+    
     let response = response.into_inner();
 
     if response.success {
+        println!("Successfully set signal: {}", path);
         for result in response.results {
             if result.success {
                 println!("  {}: OK", result.path);
@@ -201,6 +204,50 @@ async fn unsubscribe_signals(client: &mut SignalServiceClient<Channel>, paths: V
     }
 
     Ok(())
+}
+
+fn parse_state_from_json(json_str: &str) -> Result<State> {
+    let json_value: serde_json::Value = serde_json::from_str(json_str)?;
+    
+    match json_value {
+        serde_json::Value::Object(obj) => {
+            let value = if let Some(value_json) = obj.get("value") {
+                parse_value_from_json(&value_json.to_string())?
+            } else {
+                Value { value: None }
+            };
+            
+            let capability = obj.get("capability")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            
+            let availability = obj.get("availability")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+            
+            let reserved = obj.get("reserved")
+                .and_then(|v| v.as_str())
+                .unwrap_or("reserved")
+                .to_string();
+            
+            Ok(State {
+                value: Some(value),
+                capability,
+                availability,
+                reserved,
+            })
+        }
+        _ => {
+            // 単純な値の場合は、valueとして扱う
+            let value = parse_value_from_json(json_str)?;
+            Ok(State {
+                value: Some(value),
+                capability: false,
+                availability: false,
+                reserved: "reserved".to_string(),
+            })
+        }
+    }
 }
 
 fn parse_value_from_json(json_str: &str) -> Result<Value> {
