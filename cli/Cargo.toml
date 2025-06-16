@@ -14,7 +14,7 @@ log = "0.4"
 env_logger = "0.11"
 tokio-stream = "0.1"
 futures = "0.3"
-vehicle-shadow-client = { git = "https://github.com/AngryMane/vehicle-client" }
+vehicle-shadow-client = { git = "ssh://git@github.com/AngryMane/vehicle-client.git" }
 
 [build-dependencies]
 tonic-build = "0.10" 
