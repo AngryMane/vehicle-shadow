@@ -166,6 +166,7 @@ fn create_config(node: &serde_json::Value) -> Result<signal::Config, Box<dyn std
         comment: None,
         allowd: None,
         default: None,
+        end_point: String::new(),
     };
     Ok(ret)
 }

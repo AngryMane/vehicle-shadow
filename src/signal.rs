@@ -33,6 +33,7 @@ pub struct Config {
     pub comment: Option<String>,
     pub allowd: Option<Vec<Value>>,
     pub default: Option<Value>,
+    pub end_point: String,
 }
 
 #[derive(Encode, Decode, Serialize, Deserialize, Clone, Debug)]
@@ -480,7 +481,8 @@ impl Display for Config {
             \"description\": \"{:?}\", \
             \"comment\": \"{:?}\", \
             \"allowd\": \"{:?}\", \
-            \"default\": \"{:?}\" }}",
+            \"default\": \"{:?}\", \
+            \"end_point\": \"{}\" }}",
             self.leaf_type,
             self.deprecation,
             self.unit,
@@ -489,7 +491,8 @@ impl Display for Config {
             self.description,
             self.comment,
             self.allowd,
-            self.default
+            self.default,
+            self.end_point
         )
     }
 }
@@ -557,6 +560,7 @@ mod tests {
                 comment: None,
                 allowd: None,
                 default: None,
+                end_point: "".to_string(),
             },
         };
         
@@ -567,7 +571,7 @@ mod tests {
 
     #[test]
     fn test_value_type_from_str() {
-        assert!(matches!(ValueType::from_str("bool").unwrap(), ValueType::TypeBool));
+        assert!(matches!(ValueType::from_str("boolean").unwrap(), ValueType::TypeBool));
         assert!(matches!(ValueType::from_str("string").unwrap(), ValueType::TypeString));
         assert!(matches!(ValueType::from_str("int32").unwrap(), ValueType::TypeInt32));
         assert!(ValueType::from_str("invalid").is_err());

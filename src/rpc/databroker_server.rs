@@ -226,6 +226,7 @@ fn convert_signal_to_proto(signal: &crate::signal::Signal) -> vehicle_shadow::Si
                 .map(|v| v.iter().map(convert_value_to_proto).collect())
                 .unwrap_or_default(),
             default: signal.config.default.as_ref().map(convert_value_to_proto),
+            end_point: signal.config.end_point.clone(),
         }),
     }
 }
