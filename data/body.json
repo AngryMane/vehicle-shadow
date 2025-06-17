@@ -1,0 +1,801 @@
+{
+    "Vehicle": {
+        "children": {
+            "Body": {
+                "children": {
+                    "BodyType": {
+                        "datatype": "string",
+                        "description": "Body type code as defined by ISO 3779.",
+                        "type": "attribute"
+                    },
+                    "Hood": {
+                        "children": {
+                            "IsOpen": {
+                                "datatype": "boolean",
+                                "description": "Is item open or closed? True = Fully or partially open. False = Fully closed.",
+                                "type": "actuator"
+                            },
+                            "Position": {
+                                "comment": "Relationship between Open/Close and Start/End position is item dependent.",
+                                "datatype": "uint8",
+                                "description": "Item position. 0 = Start position 100 = End position.",
+                                "max": 100,
+                                "min": 0,
+                                "type": "actuator",
+                                "unit": "percent"
+                            },
+                            "Switch": {
+                                "allowed": [
+                                    "INACTIVE",
+                                    "CLOSE",
+                                    "OPEN",
+                                    "ONE_SHOT_CLOSE",
+                                    "ONE_SHOT_OPEN"
+                                ],
+                                "datatype": "string",
+                                "description": "Switch controlling sliding action such as window, sunroof, or blind.",
+                                "type": "actuator"
+                            }
+                        },
+                        "comment": "The hood is the hinged cover over the engine compartment of a motor vehicles. Depending on vehicle, it can be either in the front or back of the vehicle. Luggage compartments are in VSS called trunks, even if they are located at the front of the vehicle.",
+                        "description": "Hood status. Start position for Hood is Closed.",
+                        "type": "branch"
+                    },
+                    "Horn": {
+                        "children": {
+                            "IsActive": {
+                                "datatype": "boolean",
+                                "description": "Horn active or inactive. True = Active. False = Inactive.",
+                                "type": "actuator"
+                            }
+                        },
+                        "description": "Horn signals.",
+                        "type": "branch"
+                    },
+                    "IsAutoPowerOptimize": {
+                        "datatype": "boolean",
+                        "description": "Auto Power Optimization Flag When set to 'true', the system enables automatic power optimization, dynamically adjusting the power optimization level based on runtime conditions or features managed by the OEM. When set to 'false', manual control of the power optimization level is allowed.",
+                        "type": "actuator"
+                    },
+                    "Lights": {
+                        "children": {
+                            "Backup": {
+                                "children": {
+                                    "IsDefect": {
+                                        "datatype": "boolean",
+                                        "description": "Indicates if light is defect. True = Light is defect. False = Light has no defect.",
+                                        "type": "sensor"
+                                    },
+                                    "IsOn": {
+                                        "datatype": "boolean",
+                                        "description": "Indicates if light is on or off. True = On. False = Off.",
+                                        "type": "actuator"
+                                    }
+                                },
+                                "description": "Backup lights.",
+                                "type": "branch"
+                            },
+                            "Beam": {
+                                "children": {
+                                    "High": {
+                                        "children": {
+                                            "IsDefect": {
+                                                "datatype": "boolean",
+                                                "description": "Indicates if light is defect. True = Light is defect. False = Light has no defect.",
+                                                "type": "sensor"
+                                            },
+                                            "IsOn": {
+                                                "datatype": "boolean",
+                                                "description": "Indicates if light is on or off. True = On. False = Off.",
+                                                "type": "actuator"
+                                            }
+                                        },
+                                        "description": "Beam lights.",
+                                        "type": "branch"
+                                    },
+                                    "Low": {
+                                        "children": {
+                                            "IsDefect": {
+                                                "datatype": "boolean",
+                                                "description": "Indicates if light is defect. True = Light is defect. False = Light has no defect.",
+                                                "type": "sensor"
+                                            },
+                                            "IsOn": {
+                                                "datatype": "boolean",
+                                                "description": "Indicates if light is on or off. True = On. False = Off.",
+                                                "type": "actuator"
+                                            }
+                                        },
+                                        "description": "Beam lights.",
+                                        "type": "branch"
+                                    }
+                                },
+                                "description": "Beam lights.",
+                                "type": "branch"
+                            },
+                            "Brake": {
+                                "children": {
+                                    "IsActive": {
+                                        "allowed": [
+                                            "INACTIVE",
+                                            "ACTIVE",
+                                            "ADAPTIVE"
+                                        ],
+                                        "datatype": "string",
+                                        "description": "Indicates if break-light is active. INACTIVE means lights are off. ACTIVE means lights are on. ADAPTIVE means that break-light is indicating emergency-breaking.",
+                                        "type": "actuator"
+                                    },
+                                    "IsDefect": {
+                                        "datatype": "boolean",
+                                        "description": "Indicates if light is defect. True = Light is defect. False = Light has no defect.",
+                                        "type": "sensor"
+                                    }
+                                },
+                                "description": "Brake lights.",
+                                "type": "branch"
+                            },
+                            "DirectionIndicator": {
+                                "children": {
+                                    "Left": {
+                                        "children": {
+                                            "IsDefect": {
+                                                "datatype": "boolean",
+                                                "description": "Indicates if light is defect. True = Light is defect. False = Light has no defect.",
+                                                "type": "sensor"
+                                            },
+                                            "IsSignaling": {
+                                                "datatype": "boolean",
+                                                "description": "Indicates if light is signaling or off. True = signaling. False = Off.",
+                                                "type": "actuator"
+                                            }
+                                        },
+                                        "description": "Indicator lights.",
+                                        "type": "branch"
+                                    },
+                                    "Right": {
+                                        "children": {
+                                            "IsDefect": {
+                                                "datatype": "boolean",
+                                                "description": "Indicates if light is defect. True = Light is defect. False = Light has no defect.",
+                                                "type": "sensor"
+                                            },
+                                            "IsSignaling": {
+                                                "datatype": "boolean",
+                                                "description": "Indicates if light is signaling or off. True = signaling. False = Off.",
+                                                "type": "actuator"
+                                            }
+                                        },
+                                        "description": "Indicator lights.",
+                                        "type": "branch"
+                                    }
+                                },
+                                "description": "Indicator lights.",
+                                "type": "branch"
+                            },
+                            "Fog": {
+                                "children": {
+                                    "Front": {
+                                        "children": {
+                                            "IsDefect": {
+                                                "datatype": "boolean",
+                                                "description": "Indicates if light is defect. True = Light is defect. False = Light has no defect.",
+                                                "type": "sensor"
+                                            },
+                                            "IsOn": {
+                                                "datatype": "boolean",
+                                                "description": "Indicates if light is on or off. True = On. False = Off.",
+                                                "type": "actuator"
+                                            }
+                                        },
+                                        "description": "Fog lights.",
+                                        "type": "branch"
+                                    },
+                                    "Rear": {
+                                        "children": {
+                                            "IsDefect": {
+                                                "datatype": "boolean",
+                                                "description": "Indicates if light is defect. True = Light is defect. False = Light has no defect.",
+                                                "type": "sensor"
+                                            },
+                                            "IsOn": {
+                                                "datatype": "boolean",
+                                                "description": "Indicates if light is on or off. True = On. False = Off.",
+                                                "type": "actuator"
+                                            }
+                                        },
+                                        "description": "Fog lights.",
+                                        "type": "branch"
+                                    }
+                                },
+                                "description": "Fog lights.",
+                                "type": "branch"
+                            },
+                            "Hazard": {
+                                "children": {
+                                    "IsDefect": {
+                                        "datatype": "boolean",
+                                        "description": "Indicates if light is defect. True = Light is defect. False = Light has no defect.",
+                                        "type": "sensor"
+                                    },
+                                    "IsSignaling": {
+                                        "datatype": "boolean",
+                                        "description": "Indicates if light is signaling or off. True = signaling. False = Off.",
+                                        "type": "actuator"
+                                    }
+                                },
+                                "description": "Hazard lights.",
+                                "type": "branch"
+                            },
+                            "IsHighBeamSwitchOn": {
+                                "comment": "This signal indicates the status of the switch and does not indicate if low or high beam actually are on. That typically depends on vehicle logic and other signals like Lights.LightSwitch and Vehicle.LowVoltageSystemState.",
+                                "datatype": "boolean",
+                                "description": "Status of the high beam switch. True = high beam enabled. False = high beam not enabled.",
+                                "type": "actuator"
+                            },
+                            "LicensePlate": {
+                                "children": {
+                                    "IsDefect": {
+                                        "datatype": "boolean",
+                                        "description": "Indicates if light is defect. True = Light is defect. False = Light has no defect.",
+                                        "type": "sensor"
+                                    },
+                                    "IsOn": {
+                                        "datatype": "boolean",
+                                        "description": "Indicates if light is on or off. True = On. False = Off.",
+                                        "type": "actuator"
+                                    }
+                                },
+                                "description": "License plate lights.",
+                                "type": "branch"
+                            },
+                            "LightSwitch": {
+                                "allowed": [
+                                    "OFF",
+                                    "POSITION",
+                                    "DAYTIME_RUNNING_LIGHTS",
+                                    "AUTO",
+                                    "BEAM"
+                                ],
+                                "comment": "A vehicle typically does not support all alternatives. Which lights that actually are lit may vary according to vehicle configuration and local legislation. OFF is typically indicated by 0. POSITION is typically indicated by ISO 7000 symbol 0456. DAYTIME_RUNNING_LIGHTS (DRL) can be indicated by ISO 7000 symbol 2611. AUTO indicates that vehicle automatically selects suitable lights. BEAM is typically indicated by ISO 7000 symbol 0083.",
+                                "datatype": "string",
+                                "description": "Status of the vehicle main light switch.",
+                                "type": "actuator"
+                            },
+                            "Parking": {
+                                "children": {
+                                    "IsDefect": {
+                                        "datatype": "boolean",
+                                        "description": "Indicates if light is defect. True = Light is defect. False = Light has no defect.",
+                                        "type": "sensor"
+                                    },
+                                    "IsOn": {
+                                        "datatype": "boolean",
+                                        "description": "Indicates if light is on or off. True = On. False = Off.",
+                                        "type": "actuator"
+                                    }
+                                },
+                                "description": "Parking lights.",
+                                "type": "branch"
+                            },
+                            "Running": {
+                                "children": {
+                                    "IsDefect": {
+                                        "datatype": "boolean",
+                                        "description": "Indicates if light is defect. True = Light is defect. False = Light has no defect.",
+                                        "type": "sensor"
+                                    },
+                                    "IsOn": {
+                                        "datatype": "boolean",
+                                        "description": "Indicates if light is on or off. True = On. False = Off.",
+                                        "type": "actuator"
+                                    }
+                                },
+                                "description": "Daytime running lights (DRL).",
+                                "type": "branch"
+                            }
+                        },
+                        "description": "Exterior lights.",
+                        "type": "branch"
+                    },
+                    "Mirrors": {
+                        "children": {
+                            "DriverSide": {
+                                "children": {
+                                    "IsFolded": {
+                                        "datatype": "boolean",
+                                        "description": "Is mirror folded? True = Fully or partially folded. False = Fully unfolded.",
+                                        "type": "actuator"
+                                    },
+                                    "IsHeatingOn": {
+                                        "datatype": "boolean",
+                                        "description": "Mirror Heater on or off. True = Heater On. False = Heater Off.",
+                                        "type": "actuator"
+                                    },
+                                    "IsLocked": {
+                                        "datatype": "boolean",
+                                        "description": "Is mirror movement locked? True = Locked, mirror will not react to Tilt/Pan change. False = Unlocked.",
+                                        "type": "actuator"
+                                    },
+                                    "Pan": {
+                                        "datatype": "int8",
+                                        "description": "Mirror pan as a percent. 0 = Center Position. 100 = Fully Left Position. -100 = Fully Right Position.",
+                                        "max": 100,
+                                        "min": -100,
+                                        "type": "actuator",
+                                        "unit": "percent"
+                                    },
+                                    "Tilt": {
+                                        "datatype": "int8",
+                                        "description": "Mirror tilt as a percent. 0 = Center Position. 100 = Fully Upward Position. -100 = Fully Downward Position.",
+                                        "max": 100,
+                                        "min": -100,
+                                        "type": "actuator",
+                                        "unit": "percent"
+                                    }
+                                },
+                                "description": "All mirrors.",
+                                "type": "branch"
+                            },
+                            "PassengerSide": {
+                                "children": {
+                                    "IsFolded": {
+                                        "datatype": "boolean",
+                                        "description": "Is mirror folded? True = Fully or partially folded. False = Fully unfolded.",
+                                        "type": "actuator"
+                                    },
+                                    "IsHeatingOn": {
+                                        "datatype": "boolean",
+                                        "description": "Mirror Heater on or off. True = Heater On. False = Heater Off.",
+                                        "type": "actuator"
+                                    },
+                                    "IsLocked": {
+                                        "datatype": "boolean",
+                                        "description": "Is mirror movement locked? True = Locked, mirror will not react to Tilt/Pan change. False = Unlocked.",
+                                        "type": "actuator"
+                                    },
+                                    "Pan": {
+                                        "datatype": "int8",
+                                        "description": "Mirror pan as a percent. 0 = Center Position. 100 = Fully Left Position. -100 = Fully Right Position.",
+                                        "max": 100,
+                                        "min": -100,
+                                        "type": "actuator",
+                                        "unit": "percent"
+                                    },
+                                    "Tilt": {
+                                        "datatype": "int8",
+                                        "description": "Mirror tilt as a percent. 0 = Center Position. 100 = Fully Upward Position. -100 = Fully Downward Position.",
+                                        "max": 100,
+                                        "min": -100,
+                                        "type": "actuator",
+                                        "unit": "percent"
+                                    }
+                                },
+                                "description": "All mirrors.",
+                                "type": "branch"
+                            }
+                        },
+                        "description": "All mirrors.",
+                        "type": "branch"
+                    },
+                    "PowerOptimizeLevel": {
+                        "datatype": "uint8",
+                        "description": "Power optimization level for this branch/subsystem. A higher number indicates more aggressive power optimization. Level 0 indicates that all functionality is enabled, no power optimization enabled. Level 10 indicates most aggressive power optimization mode, only essential functionality enabled.",
+                        "max": 10,
+                        "min": 0,
+                        "type": "actuator"
+                    },
+                    "Raindetection": {
+                        "children": {
+                            "Intensity": {
+                                "datatype": "uint8",
+                                "description": "Rain intensity. 0 = Dry, No Rain. 100 = Covered.",
+                                "max": 100,
+                                "type": "sensor",
+                                "unit": "percent"
+                            }
+                        },
+                        "description": "Rain sensor signals.",
+                        "type": "branch"
+                    },
+                    "RearMainSpoilerPosition": {
+                        "datatype": "float",
+                        "description": "Rear spoiler position, 0% = Spoiler fully stowed. 100% = Spoiler fully exposed.",
+                        "max": 100,
+                        "min": 0,
+                        "type": "actuator",
+                        "unit": "percent"
+                    },
+                    "Trunk": {
+                        "children": {
+                            "Front": {
+                                "children": {
+                                    "IsLightOn": {
+                                        "comment": "V4.0 Moved from Vehicle.Cabin.Lights.IsTrunkOn because Trunk is not defined as part of the Cabin.",
+                                        "datatype": "boolean",
+                                        "description": "Is trunk light on",
+                                        "type": "actuator"
+                                    },
+                                    "IsLocked": {
+                                        "datatype": "boolean",
+                                        "description": "Is item locked or unlocked. True = Locked. False = Unlocked.",
+                                        "type": "actuator"
+                                    },
+                                    "IsOpen": {
+                                        "datatype": "boolean",
+                                        "description": "Is item open or closed? True = Fully or partially open. False = Fully closed.",
+                                        "type": "actuator"
+                                    },
+                                    "Position": {
+                                        "comment": "Relationship between Open/Close and Start/End position is item dependent.",
+                                        "datatype": "uint8",
+                                        "description": "Item position. 0 = Start position 100 = End position.",
+                                        "max": 100,
+                                        "min": 0,
+                                        "type": "actuator",
+                                        "unit": "percent"
+                                    },
+                                    "Switch": {
+                                        "allowed": [
+                                            "INACTIVE",
+                                            "CLOSE",
+                                            "OPEN",
+                                            "ONE_SHOT_CLOSE",
+                                            "ONE_SHOT_OPEN"
+                                        ],
+                                        "datatype": "string",
+                                        "description": "Switch controlling sliding action such as window, sunroof, or blind.",
+                                        "type": "actuator"
+                                    }
+                                },
+                                "comment": "A trunk is a luggage compartment in a vehicle. Depending on vehicle, it can be either in the front or back of the vehicle. Some vehicles may have trunks both at the front and at the rear of the vehicle.",
+                                "description": "Trunk status. Start position for Trunk is Closed.",
+                                "type": "branch"
+                            },
+                            "Rear": {
+                                "children": {
+                                    "IsLightOn": {
+                                        "comment": "V4.0 Moved from Vehicle.Cabin.Lights.IsTrunkOn because Trunk is not defined as part of the Cabin.",
+                                        "datatype": "boolean",
+                                        "description": "Is trunk light on",
+                                        "type": "actuator"
+                                    },
+                                    "IsLocked": {
+                                        "datatype": "boolean",
+                                        "description": "Is item locked or unlocked. True = Locked. False = Unlocked.",
+                                        "type": "actuator"
+                                    },
+                                    "IsOpen": {
+                                        "datatype": "boolean",
+                                        "description": "Is item open or closed? True = Fully or partially open. False = Fully closed.",
+                                        "type": "actuator"
+                                    },
+                                    "Position": {
+                                        "comment": "Relationship between Open/Close and Start/End position is item dependent.",
+                                        "datatype": "uint8",
+                                        "description": "Item position. 0 = Start position 100 = End position.",
+                                        "max": 100,
+                                        "min": 0,
+                                        "type": "actuator",
+                                        "unit": "percent"
+                                    },
+                                    "Switch": {
+                                        "allowed": [
+                                            "INACTIVE",
+                                            "CLOSE",
+                                            "OPEN",
+                                            "ONE_SHOT_CLOSE",
+                                            "ONE_SHOT_OPEN"
+                                        ],
+                                        "datatype": "string",
+                                        "description": "Switch controlling sliding action such as window, sunroof, or blind.",
+                                        "type": "actuator"
+                                    }
+                                },
+                                "comment": "A trunk is a luggage compartment in a vehicle. Depending on vehicle, it can be either in the front or back of the vehicle. Some vehicles may have trunks both at the front and at the rear of the vehicle.",
+                                "description": "Trunk status. Start position for Trunk is Closed.",
+                                "type": "branch"
+                            }
+                        },
+                        "comment": "A trunk is a luggage compartment in a vehicle. Depending on vehicle, it can be either in the front or back of the vehicle. Some vehicles may have trunks both at the front and at the rear of the vehicle.",
+                        "description": "Trunk status. Start position for Trunk is Closed.",
+                        "type": "branch"
+                    },
+                    "Windshield": {
+                        "children": {
+                            "Front": {
+                                "children": {
+                                    "IsHeatingOn": {
+                                        "datatype": "boolean",
+                                        "description": "Windshield heater status. False - off, True - on.",
+                                        "type": "actuator"
+                                    },
+                                    "WasherFluid": {
+                                        "children": {
+                                            "IsLevelLow": {
+                                                "datatype": "boolean",
+                                                "description": "Low level indication for washer fluid. True = Level Low. False = Level OK.",
+                                                "type": "sensor"
+                                            },
+                                            "Level": {
+                                                "datatype": "uint8",
+                                                "description": "Washer fluid level as a percent. 0 = Empty. 100 = Full.",
+                                                "max": 100,
+                                                "type": "sensor",
+                                                "unit": "percent"
+                                            }
+                                        },
+                                        "description": "Windshield washer fluid signals",
+                                        "type": "branch"
+                                    },
+                                    "Wiping": {
+                                        "children": {
+                                            "Intensity": {
+                                                "datatype": "uint8",
+                                                "description": "Relative intensity/sensitivity for interval and rain sensor mode as requested by user/driver. Has no significance if Windshield.Wiping.Mode is OFF/SLOW/MEDIUM/FAST 0 - wipers inactive. 1 - minimum intensity (lowest frequency/sensitivity, longest interval). 2/3/4/... - higher intensity (higher frequency/sensitivity, shorter interval). Maximum value supported is vehicle specific.",
+                                                "type": "actuator"
+                                            },
+                                            "IsWipersWorn": {
+                                                "datatype": "boolean",
+                                                "description": "Wiper wear status. True = Worn, Replacement recommended or required. False = Not Worn.",
+                                                "type": "sensor"
+                                            },
+                                            "Mode": {
+                                                "allowed": [
+                                                    "OFF",
+                                                    "SLOW",
+                                                    "MEDIUM",
+                                                    "FAST",
+                                                    "INTERVAL",
+                                                    "RAIN_SENSOR"
+                                                ],
+                                                "datatype": "string",
+                                                "description": "Wiper mode requested by user/driver. INTERVAL indicates intermittent wiping, with fixed time interval between each wipe. RAIN_SENSOR indicates intermittent wiping based on rain intensity.",
+                                                "type": "actuator"
+                                            },
+                                            "System": {
+                                                "children": {
+                                                    "ActualPosition": {
+                                                        "comment": "Default parking position might be used as reference position.",
+                                                        "datatype": "float",
+                                                        "description": "Actual position of main wiper blade for the wiper system relative to reference position. Location of reference position (0 degrees) and direction of positive/negative degrees is vehicle specific.",
+                                                        "type": "actuator",
+                                                        "unit": "degrees"
+                                                    },
+                                                    "DriveCurrent": {
+                                                        "comment": "May be negative in special situations.",
+                                                        "datatype": "float",
+                                                        "description": "Actual current used by wiper drive.",
+                                                        "type": "sensor",
+                                                        "unit": "A"
+                                                    },
+                                                    "Frequency": {
+                                                        "comment": "Examples - 0 = Wipers stopped, 80 = Wipers doing 80 cycles per minute (in WIPE mode).",
+                                                        "datatype": "uint8",
+                                                        "description": "Wiping frequency/speed, measured in cycles per minute. The signal concerns the actual speed of the wiper blades when moving. Intervals/pauses are excluded, i.e. the value corresponds to the number of cycles that would be completed in 1 minute if wiping permanently over default range.",
+                                                        "type": "actuator",
+                                                        "unit": "cpm"
+                                                    },
+                                                    "IsBlocked": {
+                                                        "datatype": "boolean",
+                                                        "description": "Indicates if wiper movement is blocked. True = Movement blocked. False = Movement not blocked.",
+                                                        "type": "sensor"
+                                                    },
+                                                    "IsEndingWipeCycle": {
+                                                        "comment": "In continuous wiping between A and B this sensor can be used a trigger to update TargetPosition.",
+                                                        "datatype": "boolean",
+                                                        "description": "Indicates if current wipe movement is completed or near completion. True = Movement is completed or near completion. Changes to RequestedPosition will be executed first after reaching previous RequestedPosition, if it has not already been reached. False = Movement is not near completion. Any change to RequestedPosition will be executed immediately. Change of direction may not be allowed.",
+                                                        "type": "sensor"
+                                                    },
+                                                    "IsOverheated": {
+                                                        "datatype": "boolean",
+                                                        "description": "Indicates if wiper system is overheated. True = Wiper system overheated. False = Wiper system not overheated.",
+                                                        "type": "sensor"
+                                                    },
+                                                    "IsPositionReached": {
+                                                        "datatype": "boolean",
+                                                        "description": "Indicates if a requested position has been reached. IsPositionReached refers to the previous position in case the TargetPosition is updated while IsEndingWipeCycle=True. True = Current or Previous TargetPosition reached. False = Position not (yet) reached, or wipers have moved away from the reached position.",
+                                                        "type": "sensor"
+                                                    },
+                                                    "IsWiperError": {
+                                                        "datatype": "boolean",
+                                                        "description": "Indicates system failure. True if wiping is disabled due to system failure.",
+                                                        "type": "sensor"
+                                                    },
+                                                    "IsWiping": {
+                                                        "datatype": "boolean",
+                                                        "description": "Indicates wiper movement. True if wiper blades are moving. Change of direction shall be considered as IsWiping if wipers will continue to move directly after the change of direction.",
+                                                        "type": "sensor"
+                                                    },
+                                                    "Mode": {
+                                                        "allowed": [
+                                                            "STOP_HOLD",
+                                                            "WIPE",
+                                                            "PLANT_MODE",
+                                                            "EMERGENCY_STOP"
+                                                        ],
+                                                        "datatype": "string",
+                                                        "description": "Requested mode of wiper system. STOP_HOLD means that the wipers shall move to position given by TargetPosition and then hold the position. WIPE means that wipers shall move to the position given by TargetPosition and then hold the position if no new TargetPosition is requested. PLANT_MODE means that wiping is disabled. Exact behavior is vehicle specific. EMERGENCY_STOP means that wiping shall be immediately stopped without holding the position.",
+                                                        "type": "actuator"
+                                                    },
+                                                    "TargetPosition": {
+                                                        "comment": "Default parking position might be used as reference position.",
+                                                        "datatype": "float",
+                                                        "description": "Requested position of main wiper blade for the wiper system relative to reference position. Location of reference position (0 degrees) and direction of positive/negative degrees is vehicle specific. System behavior when receiving TargetPosition depends on Mode and IsEndingWipeCycle. Supported values are vehicle specific and might be dynamically corrected. If IsEndingWipeCycle=True then wipers will complete current movement before actuating new TargetPosition. If IsEndingWipeCycle=False then wipers will directly change destination if the TargetPosition is changed.",
+                                                        "type": "actuator",
+                                                        "unit": "degrees"
+                                                    }
+                                                },
+                                                "comment": "These signals are typically not directly available to the user/driver of the vehicle. The overlay in overlays/extensions/dual_wiper_systems.vspec can be used to modify this branch to support two instances; Primary and Secondary.",
+                                                "description": "Signals to control behavior of wipers in detail. By default VSS expects only one instance.",
+                                                "type": "branch"
+                                            },
+                                            "WiperWear": {
+                                                "datatype": "uint8",
+                                                "description": "Wiper wear as percent. 0 = No Wear. 100 = Worn. Replacement required. Method for calculating or estimating wiper wear is vehicle specific. For windshields with multiple wipers the wear reported shall correspond to the most worn wiper.",
+                                                "max": 100,
+                                                "type": "sensor",
+                                                "unit": "percent"
+                                            }
+                                        },
+                                        "description": "Windshield wiper signals.",
+                                        "type": "branch"
+                                    }
+                                },
+                                "description": "Windshield signals.",
+                                "type": "branch"
+                            },
+                            "Rear": {
+                                "children": {
+                                    "IsHeatingOn": {
+                                        "datatype": "boolean",
+                                        "description": "Windshield heater status. False - off, True - on.",
+                                        "type": "actuator"
+                                    },
+                                    "WasherFluid": {
+                                        "children": {
+                                            "IsLevelLow": {
+                                                "datatype": "boolean",
+                                                "description": "Low level indication for washer fluid. True = Level Low. False = Level OK.",
+                                                "type": "sensor"
+                                            },
+                                            "Level": {
+                                                "datatype": "uint8",
+                                                "description": "Washer fluid level as a percent. 0 = Empty. 100 = Full.",
+                                                "max": 100,
+                                                "type": "sensor",
+                                                "unit": "percent"
+                                            }
+                                        },
+                                        "description": "Windshield washer fluid signals",
+                                        "type": "branch"
+                                    },
+                                    "Wiping": {
+                                        "children": {
+                                            "Intensity": {
+                                                "datatype": "uint8",
+                                                "description": "Relative intensity/sensitivity for interval and rain sensor mode as requested by user/driver. Has no significance if Windshield.Wiping.Mode is OFF/SLOW/MEDIUM/FAST 0 - wipers inactive. 1 - minimum intensity (lowest frequency/sensitivity, longest interval). 2/3/4/... - higher intensity (higher frequency/sensitivity, shorter interval). Maximum value supported is vehicle specific.",
+                                                "type": "actuator"
+                                            },
+                                            "IsWipersWorn": {
+                                                "datatype": "boolean",
+                                                "description": "Wiper wear status. True = Worn, Replacement recommended or required. False = Not Worn.",
+                                                "type": "sensor"
+                                            },
+                                            "Mode": {
+                                                "allowed": [
+                                                    "OFF",
+                                                    "SLOW",
+                                                    "MEDIUM",
+                                                    "FAST",
+                                                    "INTERVAL",
+                                                    "RAIN_SENSOR"
+                                                ],
+                                                "datatype": "string",
+                                                "description": "Wiper mode requested by user/driver. INTERVAL indicates intermittent wiping, with fixed time interval between each wipe. RAIN_SENSOR indicates intermittent wiping based on rain intensity.",
+                                                "type": "actuator"
+                                            },
+                                            "System": {
+                                                "children": {
+                                                    "ActualPosition": {
+                                                        "comment": "Default parking position might be used as reference position.",
+                                                        "datatype": "float",
+                                                        "description": "Actual position of main wiper blade for the wiper system relative to reference position. Location of reference position (0 degrees) and direction of positive/negative degrees is vehicle specific.",
+                                                        "type": "actuator",
+                                                        "unit": "degrees"
+                                                    },
+                                                    "DriveCurrent": {
+                                                        "comment": "May be negative in special situations.",
+                                                        "datatype": "float",
+                                                        "description": "Actual current used by wiper drive.",
+                                                        "type": "sensor",
+                                                        "unit": "A"
+                                                    },
+                                                    "Frequency": {
+                                                        "comment": "Examples - 0 = Wipers stopped, 80 = Wipers doing 80 cycles per minute (in WIPE mode).",
+                                                        "datatype": "uint8",
+                                                        "description": "Wiping frequency/speed, measured in cycles per minute. The signal concerns the actual speed of the wiper blades when moving. Intervals/pauses are excluded, i.e. the value corresponds to the number of cycles that would be completed in 1 minute if wiping permanently over default range.",
+                                                        "type": "actuator",
+                                                        "unit": "cpm"
+                                                    },
+                                                    "IsBlocked": {
+                                                        "datatype": "boolean",
+                                                        "description": "Indicates if wiper movement is blocked. True = Movement blocked. False = Movement not blocked.",
+                                                        "type": "sensor"
+                                                    },
+                                                    "IsEndingWipeCycle": {
+                                                        "comment": "In continuous wiping between A and B this sensor can be used a trigger to update TargetPosition.",
+                                                        "datatype": "boolean",
+                                                        "description": "Indicates if current wipe movement is completed or near completion. True = Movement is completed or near completion. Changes to RequestedPosition will be executed first after reaching previous RequestedPosition, if it has not already been reached. False = Movement is not near completion. Any change to RequestedPosition will be executed immediately. Change of direction may not be allowed.",
+                                                        "type": "sensor"
+                                                    },
+                                                    "IsOverheated": {
+                                                        "datatype": "boolean",
+                                                        "description": "Indicates if wiper system is overheated. True = Wiper system overheated. False = Wiper system not overheated.",
+                                                        "type": "sensor"
+                                                    },
+                                                    "IsPositionReached": {
+                                                        "datatype": "boolean",
+                                                        "description": "Indicates if a requested position has been reached. IsPositionReached refers to the previous position in case the TargetPosition is updated while IsEndingWipeCycle=True. True = Current or Previous TargetPosition reached. False = Position not (yet) reached, or wipers have moved away from the reached position.",
+                                                        "type": "sensor"
+                                                    },
+                                                    "IsWiperError": {
+                                                        "datatype": "boolean",
+                                                        "description": "Indicates system failure. True if wiping is disabled due to system failure.",
+                                                        "type": "sensor"
+                                                    },
+                                                    "IsWiping": {
+                                                        "datatype": "boolean",
+                                                        "description": "Indicates wiper movement. True if wiper blades are moving. Change of direction shall be considered as IsWiping if wipers will continue to move directly after the change of direction.",
+                                                        "type": "sensor"
+                                                    },
+                                                    "Mode": {
+                                                        "allowed": [
+                                                            "STOP_HOLD",
+                                                            "WIPE",
+                                                            "PLANT_MODE",
+                                                            "EMERGENCY_STOP"
+                                                        ],
+                                                        "datatype": "string",
+                                                        "description": "Requested mode of wiper system. STOP_HOLD means that the wipers shall move to position given by TargetPosition and then hold the position. WIPE means that wipers shall move to the position given by TargetPosition and then hold the position if no new TargetPosition is requested. PLANT_MODE means that wiping is disabled. Exact behavior is vehicle specific. EMERGENCY_STOP means that wiping shall be immediately stopped without holding the position.",
+                                                        "type": "actuator"
+                                                    },
+                                                    "TargetPosition": {
+                                                        "comment": "Default parking position might be used as reference position.",
+                                                        "datatype": "float",
+                                                        "description": "Requested position of main wiper blade for the wiper system relative to reference position. Location of reference position (0 degrees) and direction of positive/negative degrees is vehicle specific. System behavior when receiving TargetPosition depends on Mode and IsEndingWipeCycle. Supported values are vehicle specific and might be dynamically corrected. If IsEndingWipeCycle=True then wipers will complete current movement before actuating new TargetPosition. If IsEndingWipeCycle=False then wipers will directly change destination if the TargetPosition is changed.",
+                                                        "type": "actuator",
+                                                        "unit": "degrees"
+                                                    }
+                                                },
+                                                "comment": "These signals are typically not directly available to the user/driver of the vehicle. The overlay in overlays/extensions/dual_wiper_systems.vspec can be used to modify this branch to support two instances; Primary and Secondary.",
+                                                "description": "Signals to control behavior of wipers in detail. By default VSS expects only one instance.",
+                                                "type": "branch"
+                                            },
+                                            "WiperWear": {
+                                                "datatype": "uint8",
+                                                "description": "Wiper wear as percent. 0 = No Wear. 100 = Worn. Replacement required. Method for calculating or estimating wiper wear is vehicle specific. For windshields with multiple wipers the wear reported shall correspond to the most worn wiper.",
+                                                "max": 100,
+                                                "type": "sensor",
+                                                "unit": "percent"
+                                            }
+                                        },
+                                        "description": "Windshield wiper signals.",
+                                        "type": "branch"
+                                    }
+                                },
+                                "description": "Windshield signals.",
+                                "type": "branch"
+                            }
+                        },
+                        "description": "Windshield signals.",
+                        "type": "branch"
+                    }
+                },
+                "description": "All body components.",
+                "type": "branch"
+            }
+        },
+        "description": "High-level vehicle data.",
+        "type": "branch"
+    }
+}
