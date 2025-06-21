@@ -18,6 +18,7 @@ pub struct State {
     pub value: Value,
     pub capability: bool,
     pub availability: bool,
+    pub lock_uuid: Option<String>,
     pub reserved: String,
 }
 
@@ -530,6 +531,7 @@ mod tests {
             value: Value::Int32(100),
             capability: true,
             availability: false,
+            lock_uuid: None,
             reserved: "test".to_string(),
         };
         
@@ -547,6 +549,7 @@ mod tests {
                 value: Value::Float(60.5),
                 capability: true,
                 availability: true,
+                lock_uuid: None,
                 reserved: "".to_string(),
             },
             config: Config {

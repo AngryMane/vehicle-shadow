@@ -53,7 +53,7 @@ fn initialize(config: &Config) -> Result<VehicleShadow> {
     let vehicle_shadow = VehicleShadow::create()?;
     
     for signal in signals {
-        if let Err(e) = vehicle_shadow.set_signal(signal) {
+        if let Err(e) = vehicle_shadow.set_signal(signal, &None) {
             error!("Failed to set signal: {}", e);
         }
     }

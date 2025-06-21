@@ -1,5 +1,8 @@
+use crate::rpc::databroker_server::vehicle_shadow::{LockRequest, LockResponse, UnlockRequest, UnlockResponse};
 use crate::signal::{LeafType, Value, ValueType};
 use crate::vehicle_shadow::VehicleShadow;
+use uuid::{uuid, Uuid};
+
 use log::{error, info};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -321,6 +324,7 @@ impl SignalService for SignalServiceImpl {
         let mut success = true;
         let mut error_message = String::new();
 
+
         info!("Set request for {} signals", req.signals.len());
 
         for set_request in req.signals {
@@ -334,7 +338,7 @@ impl SignalService for SignalServiceImpl {
                             apply_state_update(&mut signal.state, proto_state);
                         }
 
-                        let set_result = self.vehicle_shadow.write().await.set_signal(signal.clone());
+                        let set_result = self.vehicle_shadow.write().await.set_signal(signal.clone(), &Some(req.token.clone()));
                         match set_result {
                             Ok(_) => {
                                 // 値が変更されたので、購読者に通知
@@ -450,6 +454,24 @@ impl SignalService for SignalServiceImpl {
             success,
             error_message,
         }))
+    }
+
+    async fn lock(&self, request: Request<LockRequest>) -> std::result::Result<Response<LockResponse>, Status> {
+        let req = request.into_inner();
+        info!("Lock request for {:?}", req.paths.len());
+        let id = Uuid::new_v4();
+        let ret = self.vehicle_shadow.write().await.try_locks(req.paths, &id.to_string());
+        if let Ok(_) = ret {
+            Ok(Response::new(LockResponse {success: true, token: id.to_string()}))
+        } else {
+            Ok(Response::new(LockResponse {success: false, token: "".to_string()}))
+        }
+    }
+
+    async fn unlock(&self, request: Request<UnlockRequest>) -> std::result::Result<Response<UnlockResponse>, Status> {
+        let req = request.into_inner();
+        let _ = self.vehicle_shadow.write().await.release_lock(&req.token);
+        Ok(Response::new(UnlockResponse {success: true }))
     }
 }
 

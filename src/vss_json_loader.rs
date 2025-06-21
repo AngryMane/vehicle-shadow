@@ -147,6 +147,7 @@ fn create_state(node: &serde_json::Value) -> Result<signal::State, Box<dyn std::
         value: default_value,
         capability: false,
         availability: false,
+        lock_uuid: None,
         reserved: String::from("reserved"),
     };
     Ok(ret)
