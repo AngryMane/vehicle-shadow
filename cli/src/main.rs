@@ -99,6 +99,8 @@ async fn get_signals(client: &mut VehicleShadowClient, paths: Vec<String>) -> Re
 }
 
 async fn set_signal(client: &mut VehicleShadowClient, path: String, value_json: String) -> Result<()> {
+    let token = get_lock(client, path.clone()).await?;
+
     let state = parse_state_from_json(&value_json).unwrap_or_else(|_| { 
         println!("{}", value_json);
         let json_value: serde_json::Value = serde_json::from_str(&value_json).unwrap();
@@ -111,7 +113,7 @@ async fn set_signal(client: &mut VehicleShadowClient, path: String, value_json: 
             reserved: None,
         }
     });
-    let response = client.set_signals([(path.clone(), state)].to_vec()).await?;
+    let response = client.set_signals([(path.clone(), state)].to_vec(), token.clone()).await?;
     if response.success {
         println!("Successfully set signal: {}", path);
         for result in response.results {
@@ -125,6 +127,8 @@ async fn set_signal(client: &mut VehicleShadowClient, path: String, value_json: 
         error!("Failed to set signal: {}", response.error_message);
         return Err(anyhow::anyhow!("Failed to set signal: {}", response.error_message));
     }
+
+    let _ = release_lock(client, token).await?;
 
     Ok(())
 }
@@ -175,5 +179,15 @@ async fn subscribe_signals(client: &mut VehicleShadowClient, paths: Vec<String>)
 
 async fn unsubscribe_signals(client: &mut VehicleShadowClient, paths: Vec<String>) -> Result<()> {
     // TODO
+    Ok(())
+}
+
+async fn get_lock(client: &mut VehicleShadowClient, path: String) -> Result<String> {
+    let token = client.lock([path].to_vec()).await?;
+    Ok(token.token)
+}
+
+async fn release_lock(client: &mut VehicleShadowClient, token: String) -> Result<()> {
+    let _ = client.unlock(token).await?;
     Ok(())
 }
